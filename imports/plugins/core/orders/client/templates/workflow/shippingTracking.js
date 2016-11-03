@@ -131,6 +131,13 @@ Template.coreOrderShippingTracking.helpers({
     return shipment.packed && shipment.tracking;
   },
 
+  // check of the order has been cancelled
+  orderCanceled() {
+    const order = Template.instance().order;
+
+    return (order.workflow.status === "coreOrderWorkflow/canceled");
+  },
+
   // Create a helper to import in the FlatButton react component
   CancelOrderButton() {
     const order = Template.instance().order;
@@ -138,11 +145,14 @@ Template.coreOrderShippingTracking.helpers({
       component: FlatButton,
       icon: "fa fa-times",
       kind: "flat",
-      className: "btn-danger",
+      className: "btn-danger btn-block",
       label: "Cancel order",
       onClick() {
-        const dataObject = order;
-        dataObject.workflow.status = "coreOrderWorkflow/processing";
+        Meteor.call("orders/cancelOrder", order._id, function(error, result){
+          if (error) {
+            console.log("error", error);
+          }
+        });
       }
     };
   }
