@@ -48,6 +48,8 @@ Template.productGrid.onRendered(function () {
       }
     });
   }
+
+  introJs().start();
 });
 
 Template.productGrid.events({
