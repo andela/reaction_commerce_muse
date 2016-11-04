@@ -6,6 +6,9 @@ import { i18next } from "/client/api";
 import { ProductSearch, Tags, OrderSearch, AccountSearch } from "/lib/collections";
 import { IconButton, SortableTable } from "/imports/plugins/core/ui/client/components";
 
+
+
+ // filterItems = [{vendor: []}, {min: 0}, {max: 9999999}, {score: false}];
 function filterResult() {
   const result = [];
   if (JSON.stringify(filterItems) === "[{\"vendor\":[]},{},{},{}]") {
@@ -40,7 +43,7 @@ function filterResult() {
           match = false;
       }
       if (match) {
-        count++;
+        count ++;
         if (count === tempFilter.length) {
           result.push(product);
         }
@@ -104,8 +107,8 @@ function tagToggle(arr, val) {
  */
 Template.searchModal.onCreated(function () {
   this.state = new ReactiveDict();
-  filterItems = [{ vendor: [] }, { min: undefined }, { max: undefined }, { score: undefined }];
-  emptyFilter = [{ vendor: [] }, { min: undefined }, { max: undefined }, { score: undefined }];
+  filterItems = [{vendor: []}, {min: undefined}, {max: undefined}, {score: undefined}];
+  emptyFilter = [{vendor: []}, {min: undefined}, {max: undefined}, {score: undefined}];
   this.state.setDefault({
     initialLoad: true,
     slug: "",
@@ -142,6 +145,7 @@ Template.searchModal.onCreated(function () {
       if (searchCollection === "products") {
         const productResults = ProductSearch.find().fetch();
         const productResultsCount = productResults.length;
+        // console.log(productResults[0]);
         this.state.set("productSearchResults", productResults);
         this.state.set("productSearchCount", productResultsCount);
 
