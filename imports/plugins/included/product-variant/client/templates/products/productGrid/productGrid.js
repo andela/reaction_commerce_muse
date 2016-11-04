@@ -49,7 +49,19 @@ Template.productGrid.onRendered(function () {
     });
   }
 
-  introJs().start();
+  const setHasTakenTour = function () {
+    console.log("Hello from the other room");
+  };
+
+  if (!Reaction.hasTakenTour()) {
+    const introJS = introJs();
+    introJS.setOption('showProgress', true).start();
+
+    introJS.onexit(setHasTakenTour);
+
+    introJS.oncomplete(setHasTakenTour);
+  }
+
 });
 
 Template.productGrid.events({

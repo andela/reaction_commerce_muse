@@ -60,6 +60,15 @@ Template.registerHelper("hasDashboardAccess", function () {
 });
 
 /**
+ * hasTakenTour template helper
+ * @summary check if user has taken tour
+ * @return {Boolean} return true if user has taken tour
+ */
+Template.registerHelper("hasTakenTour", function () {
+  return Reaction.hasTakenTour();
+});
+
+/**
  * allowGuestCheckout template helper
  * @summary check if guest users are allowed to checkout
  * @return {Boolean} return true if shop has guest checkout enabled
