@@ -2,7 +2,7 @@ import url from "url";
 import { merge, uniqWith } from "lodash";
 import { Meteor } from "meteor/meteor";
 import { EJSON } from "meteor/ejson";
-import { Jobs, Packages, Shops } from "/lib/collections";
+import {Jobs, Packages, Shops, Accounts} from "/lib/collections";
 import { Hooks, Logger } from "/server/api";
 import ProcessJobs from "/server/jobs";
 import { getRegistryDomain } from "./setDomain";
@@ -117,6 +117,18 @@ export default {
 
   hasDashboardAccess() {
     return this.hasPermission(["owner", "admin", "dashboard"]);
+  },
+
+  hasTakenTour() {
+    let userId = Meteor.userId();
+    let account = Accounts.findOne({
+      userId: userId
+    });
+    if (account && account.hasTakenTour) {
+      return true;
+    } else {
+      return false;
+    }
   },
 
   getSellerShopId() {
