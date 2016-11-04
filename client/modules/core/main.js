@@ -185,6 +185,13 @@ export default {
     return this.hasPermission(dashboardPermissions);
   },
 
+  setHasTakenTour() {
+    let userId = Meteor.userId();
+    Accounts.update({_id: userId}, {$set: {hasTakenTour: true}}, function (err, account) {
+      console.log('done', err, account);
+    });
+  },
+
   hasTakenTour() {
     let userId = Meteor.userId();
     let account = Accounts.findOne({
