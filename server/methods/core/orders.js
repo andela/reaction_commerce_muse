@@ -979,14 +979,14 @@ Meteor.methods({
       Meteor.call("orders/refunds/create", orderId, paymentMethod, amount, (error) => {
         if (error) {
           Alerts.alert(error.reason);
-          return;
+        } else {
+          // send an email to the user
+          Meteor.call("orders/sendCancelNotification", order, (err) => {
+            if (err) {
+              Logger.error(error, "orders/orderCanceled: Failed to send notification");
+            }
+          });
         }
-        // send an email to the user
-        Meteor.call("orders/sendCancelNotification", order, (err) => {
-          if (err) {
-            Logger.error(error, "orders/orderCanceled: Failed to send notification");
-          }
-        });
       });
     } else {
       // send an email to the user

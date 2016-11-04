@@ -324,9 +324,7 @@ Template.orderStatusDetail.helpers({
       for (const fullItem of self.items) {
         if (fullItem._id === shipmentItem._id) {
           if (fullItem.workflow) {
-            // if (_.isArray(fullItem.workflow.workflow)) {
             return fullItem.workflow.status === "coreOrderItemWorkflow/canceled";
-            // }
           }
         }
       }
