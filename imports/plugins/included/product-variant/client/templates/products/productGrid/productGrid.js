@@ -50,15 +50,13 @@ Template.productGrid.onRendered(function () {
   }
 
   const setHasTakenTour = function () {
-    console.log("Hello from the other room");
+    Reaction.setHasTakenTour();
   };
 
   if (!Reaction.hasTakenTour()) {
     const introJS = introJs();
-    introJS.setOption('showProgress', true).start();
-
+    introJS.start();
     introJS.onexit(setHasTakenTour);
-
     introJS.oncomplete(setHasTakenTour);
   }
 

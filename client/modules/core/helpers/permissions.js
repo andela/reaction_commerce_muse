@@ -69,6 +69,15 @@ Template.registerHelper("hasTakenTour", function () {
 });
 
 /**
+ * setHasTakenTour template helper
+ * @summary change user taken tour state
+ * @return {Null} return undefined
+ */
+Template.registerHelper("setHasTakenTour", function () {
+  return Reaction.setHasTakenTour();
+});
+
+/**
  * allowGuestCheckout template helper
  * @summary check if guest users are allowed to checkout
  * @return {Boolean} return true if shop has guest checkout enabled
