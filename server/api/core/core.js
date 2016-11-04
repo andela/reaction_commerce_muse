@@ -2,7 +2,7 @@ import url from "url";
 import { merge, uniqWith } from "lodash";
 import { Meteor } from "meteor/meteor";
 import { EJSON } from "meteor/ejson";
-import {Jobs, Packages, Shops, Accounts} from "/lib/collections";
+import { Jobs, Packages, Shops, Accounts } from "/lib/collections";
 import { Hooks, Logger } from "/server/api";
 import ProcessJobs from "/server/jobs";
 import { getRegistryDomain } from "./setDomain";
