@@ -266,6 +266,37 @@ Meteor.methods({
     };
   },
 
+  // mark each item in the order as canceled
+  /**
+   * orders/shipmentCanceled
+   *
+   * @summary trigger shipmentCanceled status and workflow update
+   * @param {Object} order - order object
+   * @param {Object} shipment - shipment object
+   * @return {Object} return results of several operations
+   */
+  "orders/shipmentCanceled": function (order, shipment) {
+    check(order, Object);
+    check(shipment, Object);
+
+    if (!Reaction.hasPermission("orders")) {
+      Logger.error("User does not have 'orders' permissions");
+      throw new Meteor.Error("access-denied", "Access Denied");
+    }
+
+    this.unblock();
+
+    const itemIds = shipment.items.map((item) => {
+      return item._id;
+    });
+
+    const workflowResult = Meteor.call("workflow/pushItemWorkflow", "coreOrderItemWorkflow/canceled", order, itemIds);
+
+    return {
+      workflowResult: workflowResult
+    };
+  },
+
   /**
    * orders/shipmentDelivered
    *
@@ -437,6 +468,74 @@ Meteor.methods({
       subject: `Your order is confirmed`,
       // subject: `Order update from ${shop.name}`,
       html: SSR.render(tpl,  dataForOrderEmail)
+    });
+
+    return true;
+  },
+
+  // send cancelNotification
+  /**
+   * orders/sendCancelNotification
+   *
+   * @summary send order cancelled notification email
+   * @param {Object} order - order object
+   * @return {Boolean} email sent or not
+   */
+  "orders/sendCancelNotification": function (order) {
+    check(order, Object);
+
+    if (!this.userId) {
+      Logger.error("orders/sendNotification: Access denied");
+      throw new Meteor.Error("access-denied", "Access Denied");
+    }
+
+    this.unblock();
+
+    // shop information for the email to be sent to the user
+    const shop = Shops.findOne(order.shopId);
+    const shopContact = shop.addressBook[0];
+
+    // Get shop logo, if available
+    let emailLogo;
+    if (Array.isArray(shop.brandAssets)) {
+      const brandAsset = _.find(shop.brandAssets, (asset) => asset.type === "navbarBrandImage");
+      const mediaId = Media.findOne(brandAsset.mediaId);
+      emailLogo = path.join(Meteor.absoluteUrl(), mediaId.url());
+    } else {
+      emailLogo = Meteor.absoluteUrl() + "resources/email-templates/shop-logo.png";
+    }
+
+    // data to be sent in the cancel order
+    const dataForOrderCancelEmail = {
+      homepage: Meteor.absoluteUrl(),
+      emailLogo: emailLogo,
+      copyrightDate: moment().format("YYYY"),
+      shop: shop,
+      shopContact: shopContact,
+      order: order,
+
+      // TODO: change this to the date the order was canceled
+      cancelDate: moment(order.createdAt).format("MM/DD/YYYY"),
+      orderUrl: getSlug(shop.name) + "/cart/canceled?_id=" + order.cartId
+    };
+
+    // anonymous users without emails.
+    if (!order.email) {
+      const msg = "No order email found. No notification sent.";
+      Logger.warn(msg);
+      throw new Meteor.Error("email-error", msg);
+    }
+
+    // email templates can be customized in Templates collection
+    // loads defaults from /private/email/templates
+    const tpl = `orders/${order.workflow.status}`;
+    SSR.compileTemplate(tpl, Reaction.Email.getTemplate(tpl));
+
+    Reaction.Email.send({
+      to: order.email,
+      from: `${shop.name} <${shop.emails[0].address}>`,
+      subject: "Your order has been canceled",
+      html: SSR.render(tpl,  dataForOrderCancelEmail)
     });
 
     return true;
@@ -687,7 +786,7 @@ Meteor.methods({
    * @param {String} orderId - add tracking to orderId
    * @return {null} no return value
    */
-  "orders/inventoryAdjust": function (orderId) {
+  "orders/inventoryAdjust": function (orderId) { // important (adjust inventory)
     check(orderId, String);
 
     if (!Reaction.hasPermission("orders")) {
@@ -822,7 +921,7 @@ Meteor.methods({
    * @param {Number} amount - Amount of the refund, as a positive number
    * @return {null} no return value
    */
-  "orders/refunds/create": function (orderId, paymentMethod, amount) {
+  "orders/refunds/create": function (orderId, paymentMethod, amount) { // Important (refund)
     check(orderId, String);
     check(paymentMethod, Reaction.Schemas.PaymentMethod);
     check(amount, Number);
@@ -850,5 +949,61 @@ Meteor.methods({
       throw new Meteor.Error(
         "Attempt to refund transaction failed", result.error);
     }
+  },
+
+  // important (added to deal with cancelling orders)
+  /**
+   * orders/cancelOrder
+   *
+   * @summary Cancel an order that hasn't been shipped
+   * @param {String} orderId - order object
+   * @return {null} no return value
+   */
+  "orders/cancelOrder": function (orderId) {
+    check(orderId, String);
+
+    if (!Reaction.hasPermission("orders")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+
+    // order and billing information
+    const order = Orders.findOne(orderId);
+    const paymentMethod = order.billing[0].paymentMethod;
+    const paymentStatus = paymentMethod.status;
+    const amount = paymentMethod.amount;
+    const shipment = order.shipping[0];
+
+    // if payment has been captured
+    if (paymentStatus === "completed") {
+      // Refund money
+      Meteor.call("orders/refunds/create", orderId, paymentMethod, amount, (error) => {
+        if (error) {
+          Alerts.alert(error.reason);
+        } else {
+          // send an email to the user
+          Meteor.call("orders/sendCancelNotification", order, (err) => {
+            if (err) {
+              Logger.error(error, "orders/orderCanceled: Failed to send notification");
+            }
+          });
+        }
+      });
+    } else {
+      // send an email to the user
+      Meteor.call("orders/sendCancelNotification", order, (err) => {
+        if (err) {
+          Logger.error(error, "orders/orderCanceled: Failed to send notification");
+        }
+      });
+    }
+
+    // change the shipping status to canceled
+    Meteor.call("orders/shipmentCanceled", order, shipment);
+    // Change status of the order to canceled
+    completedOrderResult = Meteor.call("workflow/pushOrderWorkflow", "coreOrderWorkflow", "canceled", order);
+
+    // TODO: Restock the inventory
+
+    return null;
   }
 });
