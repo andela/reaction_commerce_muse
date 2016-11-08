@@ -295,7 +295,7 @@ export default {
     if (Meteor.users.find({
       "emails.address": options.email
     }).count() === 0) {
-      accountId = Accounts.createUser(options);
+      accountId = Meteor.call('createAUser', options);
     } else {
       // this should only occur when existing admin creates a new shop
       accountId = Meteor.users.findOne({
