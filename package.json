@@ -61,6 +61,7 @@
     "react": "^15.3.2",
     "react-addons-create-fragment": "^15.3.2",
     "react-addons-pure-render-mixin": "^15.3.2",
+    "react-addons-shallow-compare": "^15.5.2",
     "react-autosuggest": "^7.0.1",
     "react-bootstrap": "^0.30.5",
     "react-color": "^2.3.2",
@@ -76,6 +77,7 @@
     "react-taco-table": "^0.5.0",
     "react-tether": "^0.5.2",
     "react-textarea-autosize": "^4.0.5",
+    "reaction-cli": "^0.9.2",
     "sortablejs": "^1.4.2",
     "stripe": "^4.11.0",
     "sweetalert2": "^5.3.8",
@@ -109,6 +111,7 @@
     }
   },
   "scripts": {
+    "start": "reaction",
     "create-report": "allure generate allure-results/ -o ~/allure-report",
     "open-report": "cd && allure report open",
     "del-report": "rm -rf ~/allure-report && rm -rf allure-results",
