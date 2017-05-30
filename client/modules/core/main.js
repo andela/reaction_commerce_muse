@@ -7,7 +7,7 @@ import { ReactiveVar } from "meteor/reactive-var";
 import Logger from "/client/modules/logger";
 import { Countries } from "/client/collections";
 import { localeDep } from  "/client/modules/i18n";
-import { Packages, Shops } from "/lib/collections";
+import { Packages, Shops, Accounts } from "/lib/collections";
 import { Router } from "/client/modules/router";
 
 /**
@@ -217,6 +217,24 @@ export default {
 
   getSellerShopId() {
     return Roles.getGroupsForUser(this.userId, "admin");
+  },
+
+  setHasTakenTour() {
+    let userId = Meteor.userId();
+    Accounts.update({_id: userId}, {$set: {hasTakenTour: true}}, function (err, account) {
+      console.log('done', err, account);
+    });
+  },
+
+  hasTakenTour() {
+    const userId = Meteor.userId();
+    const account = Accounts.findOne({
+      userId: userId
+    });
+    if (account && account.hasTakenTour) {
+      return true;
+    }
+    return false;
   },
 
   /**
