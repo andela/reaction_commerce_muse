@@ -13,9 +13,13 @@ const orderFilters = [{
 }, {
   name: "completed",
   label: "Completed"
-}];
+}, {
+  name: "canceled",
+  label: "canceled"
+}
+];
 
-const OrderHelper =  {
+const OrderHelper = {
   makeQuery(filter) {
     let query = {};
 
@@ -163,6 +167,10 @@ Template.ordersListItem.helpers({
 
   orderIsNew(order) {
     return order.workflow.status === "new";
+  },
+
+  isCanceled(order) {
+    return (order.workflow.status === "canceled");
   }
 });
 
@@ -223,7 +231,7 @@ Template.orderListFilters.onCreated(function () {
     this.subscribe("Orders");
 
     const filters = orderFilters.map((filter) => {
-      filter.label = i18next.t(`order.filter.${filter.name}`, {defaultValue: filter.label});
+      filter.label = i18next.t(`order.filter.${filter.name}`, { defaultValue: filter.label });
       filter.i18nKeyLabel = `order.filter.${filter.name}`;
       filter.count = Orders.find(OrderHelper.makeQuery(filter.name)).count();
 
@@ -301,6 +309,10 @@ Template.orderStatusDetail.helpers({
       return this.shipping[0].tracking;
     }
     return i18next.t("orderShipping.noTracking");
+  },
+
+  orderStatus: function () {
+    return this.workflow.status;
   },
 
   shipmentStatus() {
