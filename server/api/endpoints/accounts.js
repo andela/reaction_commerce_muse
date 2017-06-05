@@ -12,7 +12,6 @@ export function accounts(Api) {
         if (Accounts.insert(this.request.body)) {
           return {
             status: "success",
-            statusCode: 200,
             data: {
               message: "Account created"
             }
@@ -32,7 +31,7 @@ export function accounts(Api) {
   });
   Api.addRoute("accounts/id", { authRequired: false }, {
     get: () => {
-      return Accounts.find(this.urlParams.id);
+      return Accounts.findOne(this.urlParams.id);
     },
     delete: {
       action: () => {
