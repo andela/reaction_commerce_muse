@@ -11,7 +11,7 @@ import { Template } from "meteor/templating";
  */
 Template.cartCompleted.helpers({
   orderCompleted: function () {
-    const id =  Reaction.Router.getQueryParam("_id");
+    const id = Reaction.Router.getQueryParam("_id");
     if (id) {
       const ccoSub = Meteor.subscribe("CompletedCartOrder", Meteor.userId(), id);
       if (ccoSub.ready()) {
@@ -29,9 +29,12 @@ Template.cartCompleted.helpers({
   orderStatus: function () {
     if (this.workflow.status === "new") {
       return i18next.t("cartCompleted.submitted");
+    } else if (this.workflow.status === "canceled") {
+      return "Canceled";
     }
     return this.workflow.status;
   },
+
   userOrders: function () {
     if (Meteor.user()) {
       return Orders.find({
