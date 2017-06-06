@@ -1,7 +1,7 @@
 import { Reaction } from "/client/api";
 import { ReactionProduct } from "/lib/api";
 import { applyProductRevision } from "/lib/api/products";
-import { Products, Tags } from "/lib/collections";
+import { Products, Tags, Packages } from "/lib/collections";
 import { Session } from "meteor/session";
 import { Template } from "meteor/templating";
 import { ITEMS_INCREMENT } from "/client/config/defaults";
@@ -170,5 +170,32 @@ Template.products.events({
   "click [data-event-action=loadMoreProducts]": (event) => {
     event.preventDefault();
     loadMoreProducts();
+  }
+});
+
+// Social Media Content
+Template.socialContent.onCreated(function () {
+  this.state = new ReactiveDict();
+  this.state.setDefault({
+    feeds: {}
+  });
+  this.autorun(() => {
+    this.subscribe("Packages");
+    const feedsConfig = Packages.findOne({
+      name: "reaction-social"
+    });
+    this.state.set("feeds", feedsConfig.settings.public.apps);
+  });
+});
+/**
+ * Helpers for social media content integration
+ */
+Template.socialContent.helpers({
+  twitterUrl() {
+    const twitterConfig = Template.instance().state.get("feeds").twitter;
+    if (twitterConfig.enabled && twitterConfig.profilePage !== "") {
+      return twitterConfig.profilePage;
+    }
+    return false;
   }
 });
