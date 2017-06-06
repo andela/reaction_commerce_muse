@@ -14,6 +14,10 @@ import "./templates/productSearch/productItem.js";
 import "./templates/productSearch/content.html";
 import "./templates/productSearch/content.js";
 
+// Product sort and filter
+import "./templates/searchModal/searchFilter.html";
+import "./templates/searchModal/searchFilter.js";
+
 // Order Search
 import "./templates/orderSearch/orderResults.html";
 import "./templates/orderSearch/orderResults.js";

@@ -6,15 +6,18 @@
 
     <div class="rui search-modal-header">
 
-      {{> searchInput }}
+      {{> searchInput }} 
+      {{> searchFilter productSearchResults=productSearchResults}}
+      {{> sortProduct}}
 
-      {{> searchTypeToggle }}
+      <!--{{> searchTypeToggle }}-->
 
-      {{> productSearchTags tagSearchResults=tagSearchResults }}
+      <!--{{> productSearchTags tagSearchResults=tagSearchResults }}-->
 
     </div>
 
-    {{> searchResults productSearchResults=productSearchResults orderSearchResults=orderSearchResults accountSearchResults=accountSearchResults orderTable=orderTable accountTable=accountTable }}
+    {{> searchResults productSearchResults=productSearchResults orderSearchResults=orderSearchResults accountSearchResults=accountSearchResults
+    orderTable=orderTable accountTable=accountTable }}
 
   </div>
 
