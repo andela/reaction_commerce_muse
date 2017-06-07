@@ -9,11 +9,11 @@ export function shops(Api) {
   });
 
   Api.addRoute("shops/:id", { authRequired: false }, {
-    get: () => {
+    get: function () {
       return Shops.findOne(this.urlParams.id);
     },
     delete: {
-      action: () => {
+      action: function () {
         if (Shops.remove(this.urlParams.id)) {
           return { status: "success", message: "Shop removed" };
         }

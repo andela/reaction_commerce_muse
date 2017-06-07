@@ -21,12 +21,12 @@ export function inventory(Api) {
   });
 
   Api.addRoute("inventory/:id", { authRequired: false }, {
-    get: () => {
-      return inventory.findOne().fetch();
+    get: function () {
+      return Inventory.findOne(this.urlParams.id);
     },
     delete: {
       roleRequired: ["author", "admin"],
-      action: () => {
+      action: function () {
         if (Inventory.remove(this.urlParams.id)) {
           return { status: "success", message: "Inventory item deleted" };
         }

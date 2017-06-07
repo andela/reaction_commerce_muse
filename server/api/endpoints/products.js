@@ -19,12 +19,12 @@ export function products(Api) {
     }
   });
   Api.addRoute("products/:id", { authRequired: false }, {
-    get: () => {
-      return Products.findOne().fetch();
+    get() {
+      return Products.findOne(this.urlParams._id);
     },
     delete: {
       roleRequired: ["author", "admin"],
-      action: () => {
+      action: function () {
         if (Products.remove(this.urlParams.id)) {
           return { status: "success", message: "Product deleted" };
         }

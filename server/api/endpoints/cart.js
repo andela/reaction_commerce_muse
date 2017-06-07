@@ -28,12 +28,12 @@ export function cart(Api) {
     }
   });
   Api.addRoute("cart/:id", { authRequired: false }, {
-    get: () => {
-      return Cart.findOne().fetch();
+    get: function () {
+      return Cart.findOne(this.urlParams._id);
     },
     delete: {
       roleRequired: ["author", "admin"],
-      action: () => {
+      action: function () {
         if (Cart.remove(this.urlParams.id)) {
           return { status: "success", data: { message: "Item removed from cart" } };
         }

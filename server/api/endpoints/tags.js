@@ -19,12 +19,12 @@ export function tags(Api) {
     }
   });
   Api.addRoute("tags/:id", { authRequired: false }, {
-    get: () => {
-      return Tags.findOne().fetch();
+    get: function () {
+      return Tags.findOne(this.urlParams._id)
     },
     delete: {
       roleRequired: ["author", "admin"],
-      action: () => {
+      action: function () {
         if (Tags.remove(this.urlParams.id)) {
           return { status: "success", message: "Tag deleted" };
         }

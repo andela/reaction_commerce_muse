@@ -23,18 +23,17 @@ export function accounts(Api) {
           data: {
             message: "Account creation unsuccessful"
           }
-
-
         };
       }
     }
   });
-  Api.addRoute("accounts/id", { authRequired: false }, {
-    get: () => {
-      return Accounts.findOne(this.urlParams.id);
+  Api.addRoute("accounts/:id", { authRequired: false }, {
+
+    get: function () {
+      return Accounts.findOne(this.urlParams._id);
     },
     delete: {
-      action: () => {
+      action: function () {
         if (Accounts.remove(this.urlParams.id)) {
           return { status: "success", data: { message: "Account deleted" } };
         }
