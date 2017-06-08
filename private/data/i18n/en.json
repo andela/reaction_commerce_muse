@@ -60,6 +60,8 @@
           "paypalLabel": "PayPal",
           "paypalTitle": "PayPal",
           "paypalDescription": "PayPal payments",
+          "paystackLabel": "Paystack",
+          "paystackTitle": "Paystack",
           "revisionsLabel": "Revisions",
           "revisionsTitle": "Revisions",
           "revisionsDescription": "Revision control",
