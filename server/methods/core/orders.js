@@ -221,6 +221,18 @@ Meteor.methods({
   "orders/cancelOrder"(order) {
     check(order, Object);
 
+    // send email notification on cancel order
+
+    if (order.email) {
+      Meteor.call("orders/sendNotification", order, (err) => {
+        if (err) {
+          Logger.error(err, "orders/cancelOrder: Failed to send notification");
+        }
+      });
+    } else {
+      Logger.warn("No order email found. No notification sent.");
+    }
+
     // Update Order
     return Orders.update(order._id, {
       $set: {
