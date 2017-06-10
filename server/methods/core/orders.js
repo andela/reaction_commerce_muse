@@ -6,7 +6,7 @@ import Future from "fibers/future";
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { getSlug } from "/lib/api";
-import { Cart, Media, Orders, Products, Shops } from "/lib/collections";
+import { Cart, Media, Orders, Products, Shops, Notifications } from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
 import { Logger, Reaction } from "/server/api";
 
@@ -338,6 +338,38 @@ Meteor.methods({
   },
 
   /**
+   * notifications/retrieveNotifications
+   *
+   * @summary retrieve user notifications
+   * @param {String} currentUserId - current user Id
+   * @return {Boolean} the notification object or null
+   */
+  "notifications/retrieveNotifications": function (currentUserId) {
+    try {
+      check(currentUserId, String);
+      const notification = Notifications.find({ userId: currentUserId }).fetch(); return notification ? notification : [false];
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * notifications/clearNotifications
+   * @summary clear notifications
+   * @param {String} currentUserId- current user Id
+   */
+
+  "notifications/clearNotifications": function (currentUserId) {
+    try {
+      check(currentUserId, String);
+      const selector = {
+        userId: currentUserId
+      };
+      Notifications.remove(selector);
+    } catch (e) { }
+  },
+
+  /**
    * orders/sendNotification
    *
    * @summary send order notification email
@@ -456,7 +488,7 @@ Meteor.methods({
     Reaction.Email.send({
       to: order.email,
       from: `${shop.name} <${shop.emails[0].address}>`,
-      subject: `Your order is confirmed`,
+      subject: "Your order is confirmed",
       // subject: `Order update from ${shop.name}`,
       html: SSR.render(tpl, dataForOrderEmail)
     });
