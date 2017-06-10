@@ -9,6 +9,8 @@ import { getSlug } from "/lib/api";
 import { Cart, Media, Orders, Products, Shops, Notifications } from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
 import { Logger, Reaction } from "/server/api";
+import { HTTP } from "meteor/http";
+import * as Collections from "/lib/collections";
 
 /**
  * Reaction Order Methods
@@ -56,6 +58,12 @@ Meteor.methods({
         "coreOrderWorkflow", "coreOrderDocuments", order._id);
     }
   },
+
+  // fetch orders from db
+  "orders/getOrder": () => {
+    return Orders.find({}).fetch();
+  },
+
 
   /**
    * orders/shipmentPacked
@@ -212,26 +220,30 @@ Meteor.methods({
   },
 
   /**
+   * orders/cancelOrder
    *
    * @summary Cancel an Order
    * @param {Object} order - order object
    * @param {Object} newComment - new comment object
-   * @return {Object} return updated shipping results
+   * @return {Object} return updated result
    */
   "orders/cancelOrder"(order) {
     check(order, Object);
 
-    // send email notification on cancel order
+    this.unblock();
 
-    if (order.email) {
-      Meteor.call("orders/sendNotification", order, (err) => {
-        if (err) {
-          Logger.error(err, "orders/cancelOrder: Failed to send notification");
-        }
-      });
-    } else {
-      Logger.warn("No order email found. No notification sent.");
-    }
+    const notifications = {
+      userId: order.userId,
+      name: "Order Canceled",
+      type: "canceled",
+      message: "❌ Your order has been cancelled!",
+      read: false,
+      orderId: order._id
+    };
+
+    check(notifications, Schemas.Notifications);
+    Notifications.insert(notifications);
+
 
     // Update Order
     return Orders.update(order._id, {
@@ -244,6 +256,7 @@ Meteor.methods({
     });
   },
 
+  /**
   /**
    * orders/shipmentShipped
    *
@@ -359,7 +372,8 @@ Meteor.methods({
   "notifications/retrieveNotifications": function (currentUserId) {
     try {
       check(currentUserId, String);
-      const notification = Notifications.find({ userId: currentUserId }).fetch(); return notification ? notification : [false];
+      const notification = Notifications.find({ userId: currentUserId }).fetch();
+      return notification ? notification : [false];
     } catch (e) {
       return false;
     }
@@ -367,10 +381,10 @@ Meteor.methods({
 
   /**
    * notifications/clearNotifications
+   *
    * @summary clear notifications
-   * @param {String} currentUserId- current user Id
+   * @param {String} currentUserId - current user Id
    */
-
   "notifications/clearNotifications": function (currentUserId) {
     try {
       check(currentUserId, String);
@@ -378,7 +392,31 @@ Meteor.methods({
         userId: currentUserId
       };
       Notifications.remove(selector);
-    } catch (e) { }
+    } catch (e) {
+    }
+  },
+
+  /**
+   * notification/getUnreadCount
+   * @description gets notification counts
+   * @return {Number} returns unread notification count
+   */
+  "notification/getUnreadCount"() {
+    return Notifications.find({ userId: Meteor.userId(), read: false }).count();
+  },
+
+  /**
+   * notifications/markReadAll
+   * @description marks notifications as read
+   * @return {Boolean} returns true
+   */
+  "notifications/markReadAll"() {
+    Notifications.update({ userId: Meteor.userId() }, {
+      $set: {
+        read: true
+      }
+    }, { multi: true });
+    return true;
   },
 
   /**
@@ -398,9 +436,105 @@ Meteor.methods({
 
     this.unblock();
 
-    // Get Shop information
+    const notifications = {
+      userId: order.userId,
+      name: "Order Received",
+      type: "new",
+      message: "🛒 Your order just joined the processing queue!",
+      read: false,
+      orderId: order._id
+    };
+
+    if (order.workflow.status === "coreOrderWorkflow/processing") {
+      notifications.name = "Order Processing";
+      notifications.type = "processing";
+      notifications.message = "🎁 Your order is currently being processed!";
+    }
+
+    if (order.workflow.status === "coreOrderItemWorkflow/shipped") {
+      notifications.name = "Order Shipped";
+      notifications.type = "shipped";
+      notifications.message = "🚢 Your order is on its way!";
+    }
+
+    if (order.workflow.status === "coreOrderWorkflow/completed") {
+      notifications.name = "Order Completed";
+      notifications.type = "completed";
+      notifications.message = "🚢 Your order is on its way!";
+    }
+
+    if (order.workflow.status === "canceled" || order.workflow.status === "coreOrderWorkflow/canceled") {
+      notifications.name = "Order Canceled";
+      notifications.type = "canceled";
+      notifications.message = "❌ Your order has been cancelled!";
+    }
+
+
+    check(notifications, Schemas.Notifications);
+    Notifications.insert(notifications);
+
+    let locale;
+
+    const countryAlphaCode = (order.billing[0].address.country).toUpperCase();
+
+    if (countryAlphaCode === "US") {
+      locale = 1;
+    } else if (countryAlphaCode === "KE") {
+      locale = 254;
+    } else if (countryAlphaCode === "NG") {
+      locale = 234;
+    }
+
+    const customerNumber = `+${locale}${order.billing[0].address.phone}`;
+
     const shop = Shops.findOne(order.shopId);
     const shopContact = shop.addressBook[0];
+
+    const orderedItems = order.items.length;
+    let orderedProducts = "";
+    for (let i = 0; i < orderedItems; i += 1) {
+      orderedProducts += ` ${order.items[i].title},`;
+    }
+    const customerNotifyAlert = {
+      to: customerNumber,
+      message: `We have received your order for ${orderedProducts} we are currently processing it. Keep it Arakari!`
+    };
+    if (order.workflow.status === "new") {
+      Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
+        if (error) {
+          Logger.warn("ERROR", error);
+        } else {
+          Logger.info("SMS SENT");
+        }
+      });
+    } else if (order.workflow.status === "coreOrderWorkflow/processing") {
+      customerNotifyAlert.message = "Your order is currently being processed! Keep it Arakari!";
+      Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
+        if (error) {
+          Logger.warn("ERROR", error);
+        } else {
+          Logger.info("SMS SENT");
+        }
+      });
+    } else if (order.workflow.status === "coreOrderWorkflow/completed" || order.workflow.status === "coreOrderItemWorkflow/shipped") {
+      customerNotifyAlert.message = "Your order is on its way! Keep it Arakari!";
+      Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
+        if (error) {
+          Logger.warn("ERROR", error);
+        } else {
+          Logger.info("SMS SENT");
+        }
+      });
+    } else if (order.workflow.status === "canceled" || order.workflow.status === "coreOrderWorkflow/canceled") {
+      customerNotifyAlert.message = `Your order has been canceled, for more information contact ${shopContact.company}. Keep it Arakari!`;
+      Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
+        if (error) {
+          Logger.warn("ERROR", error);
+        } else {
+          Logger.info("SMS SENT");
+        }
+      });
+    }
 
     // Get shop logo, if available
     let emailLogo;
@@ -500,8 +634,7 @@ Meteor.methods({
     Reaction.Email.send({
       to: order.email,
       from: `${shop.name} <${shop.emails[0].address}>`,
-      subject: "Your order is confirmed",
-      // subject: `Order update from ${shop.name}`,
+      subject: "Order updates from Arakari!",
       html: SSR.render(tpl, dataForOrderEmail)
     });
 
@@ -912,9 +1045,33 @@ Meteor.methods({
 
     if (result.saved === false) {
       Logger.fatal("Attempt for refund transaction failed", order._id, paymentMethod.transactionId, result.error);
-
       throw new Meteor.Error(
         "Attempt to refund transaction failed", result.error);
     }
+  },
+
+  /**
+   * sms/notif/alert
+   *
+   * @summary sends the sms alert
+   * @param {Object} currentUserId - current user Id
+   * @return {Boolean} the notification object or null
+   */
+  "sms/notif/alert": function (smsAlert) {
+    check(smsAlert, Object);
+    HTTP.call("POST", `${process.env.SMS_URL}${process.env.accountSID}/Messages.json`,
+      {
+        params:
+        {
+          From: process.env.phoneNumber,
+          To: smsAlert.to,
+          Body: smsAlert.message
+        },
+        auth: `${process.env.accountSID}:${process.env.authToken}`
+      }, (error, result) => {
+        error ? Logger.warn("Error in sending the SMS", error)
+          : Logger.info("New order sms alert sent to ", smsAlert.to, result);
+      }
+    );
   }
 });
