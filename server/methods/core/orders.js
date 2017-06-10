@@ -497,7 +497,7 @@ Meteor.methods({
     }
     const customerNotifyAlert = {
       to: customerNumber,
-      message: `We have received your order for ${orderedProducts} we are currently processing it. Keep it Arakari!`
+      message: `We have received your order for ${orderedProducts} we are currently processing it. Keep it MUse!`
     };
     if (order.workflow.status === "new") {
       Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
@@ -508,7 +508,7 @@ Meteor.methods({
         }
       });
     } else if (order.workflow.status === "coreOrderWorkflow/processing") {
-      customerNotifyAlert.message = "Your order is currently being processed! Keep it Arakari!";
+      customerNotifyAlert.message = "Your order is currently being processed! Keep it MUSE!";
       Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
         if (error) {
           Logger.warn("ERROR", error);
@@ -517,7 +517,7 @@ Meteor.methods({
         }
       });
     } else if (order.workflow.status === "coreOrderWorkflow/completed" || order.workflow.status === "coreOrderItemWorkflow/shipped") {
-      customerNotifyAlert.message = "Your order is on its way! Keep it Arakari!";
+      customerNotifyAlert.message = "Your order is on its way! Keep it MUSE!";
       Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
         if (error) {
           Logger.warn("ERROR", error);
@@ -526,7 +526,7 @@ Meteor.methods({
         }
       });
     } else if (order.workflow.status === "canceled" || order.workflow.status === "coreOrderWorkflow/canceled") {
-      customerNotifyAlert.message = `Your order has been canceled, for more information contact ${shopContact.company}. Keep it Arakari!`;
+      customerNotifyAlert.message = `Your order has been canceled, for more information contact ${shopContact.company}. Keep it MUSE!`;
       Meteor.call("sms/notif/alert", customerNotifyAlert, (error, result) => {
         if (error) {
           Logger.warn("ERROR", error);
@@ -634,7 +634,7 @@ Meteor.methods({
     Reaction.Email.send({
       to: order.email,
       from: `${shop.name} <${shop.emails[0].address}>`,
-      subject: "Order updates from Arakari!",
+      subject: "Order updates from MUSE!",
       html: SSR.render(tpl, dataForOrderEmail)
     });
 
