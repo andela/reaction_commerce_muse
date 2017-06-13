@@ -27,7 +27,8 @@ Template.searchModal.onCreated(function () {
     canLoadMoreProducts: false,
     searchQuery: "",
     productSearchResults: [],
-    tagSearchResults: []
+    tagSearchResults: [],
+    suggestionSearchResults: []
   });
 
 
@@ -73,6 +74,14 @@ Template.searchModal.onCreated(function () {
         const tagResults = Tags.find({
           _id: { $in: hashtags }
         }).fetch();
+        const suggestionsResult = results.map((product) => {
+          if (product.title && searchQuery) {
+            if (product.title[0].toLowerCase() === searchQuery[0].toLowerCase()) {
+              return product.title;
+            }
+          }
+        });
+        this.state.set("suggestionSearchResults", suggestionsResult);
         this.state.set("tagSearchResults", tagResults);
 
         // TODO: Do we need this?
@@ -134,6 +143,11 @@ Template.searchModal.helpers({
         });
       }
     };
+  },
+  suggestionSearchResults() {
+    const instance = Template.instance();
+    const suggestions = instance.state.get("suggestionSearchResults");
+    return suggestions;
   },
   productSearchResults() {
     const instance = Template.instance();
