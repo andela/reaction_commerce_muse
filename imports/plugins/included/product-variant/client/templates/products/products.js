@@ -191,6 +191,17 @@ Template.socialContent.onCreated(function () {
  * Helpers for social media content integration
  */
 Template.socialContent.helpers({
+  facebookUrl() {
+    const facebookConfig = Template.instance().state.get("feeds").facebook;
+    // Check if configuration is enabled and profilepage is set
+    if (facebookConfig.enabled && facebookConfig.appId !== "" && facebookConfig.profilePage !== "") {
+      // Get the index to substr and get page name using substr
+      const index = facebookConfig.profilePage.lastIndexOf("/") + 1;
+      // return IFrame src as per https://developers.facebook.com/docs/plugins/page-plugin
+      return `https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2F${facebookConfig.profilePage.substr(index)}&tabs=timeline&width=1000&height=400&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=true&appId=${facebookConfig.appId}`;
+    }
+    return false;
+  },
   twitterUrl() {
     const twitterConfig = Template.instance().state.get("feeds").twitter;
     if (twitterConfig.enabled && twitterConfig.profilePage !== "") {
