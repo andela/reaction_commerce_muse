@@ -117,6 +117,7 @@ mongo@1.1.12_5
 mongo-id@1.0.5
 mongo-livedata@1.0.12
 mrt:later@1.6.1
+nimble:restivus@0.8.11
 npm-bcrypt@0.9.1_1
 npm-mongo@2.2.10_1
 oauth@1.1.11
@@ -146,6 +147,8 @@ service-configuration@1.0.10
 session@1.1.6
 sha@1.0.8
 shell-server@0.2.1
+simple:json-routes@2.1.0
+simple:rest@1.1.1
 spacebars@1.0.13
 spacebars-compiler@1.0.13
 srp@1.0.9
